@@ -1,6 +1,6 @@
-const fs = require("fs");
+import fs from "fs";
 
-class ProductManager {
+export default class ProductManager {
     constructor(path) {
         this.path = path;
     }
@@ -12,26 +12,31 @@ class ProductManager {
                 const productsParse = JSON.parse(products);
                 return productsParse;
             } else {
-                return [];
+                console.log("no hay productos que devolver");
+                return null;
             }
         } catch (error) {
-            console.log(error);
+            console.log("message:", error.message, "Reason:", error.name);
+            throw new Error("message:", error.message, "Reason:", error.name);
         }
     }
     // obtiene el producto segun el id pasado
     async getProductsById(id) {
+        // devuelve null o un elemento {}
         const productSave = await this.getProducts();
-        const foundId = productSave.find((product) => product.id === id);
-        if (foundId === undefined) {
+
+        const found = productSave.find((product) => product.id === id);
+
+        if (found === undefined) {
             console.log("Not Found");
             return null;
-        } else {
-            console.log("producto encontrado");
-            return foundId;
         }
+        console.log("producto encontrado");
+        return found;
     }
     // agrega un producto
     async addProduct(title, description, price, thumbnail, code, stock) {
+        //devuelve el prducto entero {} y si salta al cathch devuelve null para manejarlo en el cliente
         if (!title || !description || !price || !thumbnail || !code || !stock) {
             throw new Error("Faltan rellenar campos");
         }
@@ -50,7 +55,8 @@ class ProductManager {
             await fs.promises.writeFile(this.path, JSON.stringify(productSave));
             return productSave;
         } catch (error) {
-            console.log(error);
+            console.log("message:", error.message, "Reason:", error.name);
+            return null;
         }
     }
     // elimina un productos
@@ -67,19 +73,19 @@ class ProductManager {
                 throw new Error("El id indicado no se encotro");
             } else {
                 productSave.splice(indexToProductDelete, 1);
-                console.log(productSave);
                 await fs.promises.writeFile(this.path, JSON.stringify(productSave));
                 return productSave;
             }
         } catch (error) {
-            console.log(error);
+            console.log("message:", error.message, "Reason:", error.name); //no retorno un thorw new Error porque getProduct ya retorna un throw y directamente sale en el mensaje en consola para el dessarrollador en cambio en el cliente le va a aparecer null
+            return null;
         }
     }
     // modifica un producto con el id que se indique y el campo que quiera modificar o el producto entero (sin modificar el id)
     async udapteProduct(id, elementudapte) {
+        // devuelve todos los productos con el producto modificado [{},{},{}]
         if (!id || !elementudapte) {
-            console.error("Faltan rellenar campos");
-            return null;
+            throw new Error("Falta campos a rellenar");
         }
         try {
             const productSave = await this.getProducts();
@@ -114,37 +120,8 @@ class ProductManager {
 
             return id;
         } catch (error) {
-            console.log(error);
+            console.log("message:", error.message, "Reason:", error.name);
+            return null;
         }
     }
 }
-const manager = new ProductManager("Products.json");
-
-async function prueba() {
-    // const getProducts = await manager.getProducts();
-    // const getProductsById = await manager.getProductsById(1);
-    // const deleteProduct = await manager.deleteProduct(2);
-    // const udapteProduct = await manager.udapteProduct(5, {
-    //   title: "titulo modificado sin modificar el id",
-    //   description: "descripcion modificada",
-    //   price: 200,
-    //   thumbnail: "URL image meodificada",
-    //   code: 300,
-    //   stock: 10,
-    // });
-    // const addProduct = await manager.addProduct(
-    //   "Titulo5",
-    //   "descripcion5",
-    //   40,
-    //   "URL image5",
-    //   100,
-    //   40
-    // );
-    // console.log(addProduct);
-    // console.log(getProducts);
-    // console.log(getProductsById);
-    // console.log(udapteProduct);
-    // console.log(deleteProduct);
-}
-
-prueba();
