@@ -3,22 +3,10 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {{!-- Toast Error --}}
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <link rel="stylesheet" href="styles/index.css" />
-    <title>Desafio clase 11</title>
+    <title>{{title}}</title>
   </head>
   <body>
-        {{> navBar }}
-
-    <div>
-      {{{body}}}
-    </div>
-  
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <script src="js/socket.js"></script>
-    <script src="js/index.js"></script>
-
+    {{> menu }}
+    {{{body}}}
   </body>
 </html>
