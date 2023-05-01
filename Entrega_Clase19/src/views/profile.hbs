@@ -1,0 +1,22 @@
+<head>
+  <link rel="stylesheet" href="styles/profile.css" />
+
+</head>
+<div>
+  {{>navBar}}
+</div>
+
+<div class="top-profile">
+  <div class="welcome">
+    <span class="first" id="first_name"></span>
+    <span class="last" id="last_name"></span>
+    <h3>Datos de perfil</h3>
+    <div class="userData">
+      <p>Email: <span id="current_email"></span></p>
+      <p>Edad: <span id="current_age"></span></p>
+    </div>
+  </div>
+  <button class="btn" id="btn_logout">LOGOUT</button>
+</div>
+
+<script src="js/profile.js"></script>
