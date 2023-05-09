@@ -1,80 +1,103 @@
-import express from "express";
-import handlebars from "express-handlebars";
-import { Server } from "socket.io";
-import session from "express-session";
+import express, { urlencoded } from "express";
+import exphbs from "express-handlebars";
+import path from "path";
+import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
+import session from "express-session";
 import FileStore from "session-file-store";
-//passport
-import passport from "passport";
-import "./passport/passportStrategies.js";
+import MongoStore from "connect-mongo";
 
-import { __dirname } from "./utils.js";
-import { join } from "path";
-import realTimeProducts from "./routes/realTimeProducts.route.js";
-import cartRoute from "./routes/cart.route.js";
-import productsRoute from "./routes/products.route.js";
-import userRoute from "./routes/user.route.js";
-import view from "./routes/views.router.js";
-import chat from "./routes/messages.route.js";
-// Mongo DB
-import "./dao/dbConfig.js";
-import mongoStore from "connect-mongo";
-//DOTENV
-import dotenv from "dotenv";
-dotenv.config();
+import _dirname from "./utils.js";
+import productRoutes from "./routes/products.routes.js";
+import cartRoutes from "./routes/carts.routes.js";
+import viewsRouter from "./routes/views.router.js";
+import usersViewRouter from "./routes/users.views.router.js";
+import sessionsRouter from "./routes/sessions.router.js";
 
+// const fileStorage = FileStore(session);
 const app = express();
-const cookieKey = "CookieFirmadaUser";
+const PORT = 8080;
+const MONGO_URL =
+  "mongodb://localhost:27017/ecommerce?retryWrites=true&w=majority";
+
+// middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser(cookieKey));
+app.use(express.static(path.join(_dirname, "public")));
 
-// archivos estaticos
-app.use(express.static(__dirname + "/public"));
-
-// Motor de plantillas
-app.set("views", join(__dirname, "views"));
-// config de hadlebars
-const hbs = handlebars.create({
-  defaultLayout: "main",
-  layoutsDir: join(app.get("views"), "layouts"),
-  partialsDir: join(app.get("views"), "partials"),
-  extname: ".hbs",
-});
-app.engine(".hbs", hbs.engine);
-app.set("view engine", ".hbs");
-
-// mongo session
+app.use(cookieParser());
 app.use(
   session({
-    store: new mongoStore({
-      mongoUrl: process.env.URI_MONGO,
+    // store: fileStorage({ path: "./sessions", ttl: 100, retries: 0 }),
+    store: MongoStore.create({
+      mongoUrl: MONGO_URL,
+      mongoOptions: { useNewUrlParser: true, useUnifiedTopology: true },
+      ttl: 100,
     }),
-    secret: "ecommerceKey",
+    secret: "S3cr3t",
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 360000 },
   })
 );
 
-// passport
-//inicializar passport
-app.use(passport.initialize());
-// passport va a guardar la informacion de session
-app.use(passport.session());
+// motor de plantillas
+app.set("views", path.join(_dirname, "views"));
 
-//Rutas
-app.use("/", view);
-app.use("/chat", chat);
-app.use("/realtimeproducts", realTimeProducts);
-app.use("/api/products", productsRoute);
-app.use("/api/carts", cartRoute);
-app.use("/api/auth", userRoute);
+app.engine(
+  ".hbs",
+  exphbs.engine({
+    layoutsDir: path.join(app.get("views"), "layouts"),
+    partialsDir: path.join(app.get("views"), "partials"),
+    defaultLayout: "main",
+    extname: ".hbs",
+  })
+);
 
-const httpServer = app.listen(8080, () => {
-  console.log("Escuchando al puerto", 8080);
+app.set("view engine", ".hbs");
+
+// endpoints
+app.use("/", viewsRouter);
+app.use("/api/products", productRoutes);
+app.use("/api/carts", cartRoutes);
+app.use("/api/sessions", sessionsRouter);
+app.use("/users", usersViewRouter);
+
+const httpServer = app.listen(PORT, () => {
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
 
-// websocket
+const connectMongoDB = async () => {
+  try {
+    await mongoose.connect(MONGO_URL);
+    console.log("Conectado con exito a MongoDB usando Moongose.");
 
-export const socketServer = new Server(httpServer);
+    /*let nuevoEstudiante = await studentsModel.create({
+            name: "Luis",
+            lastName : "Munar",
+            age : "20",
+        });*/
+
+    /*let nuevoCurso = await coursesModel.create(
+            {
+                title: "Curso Backend",
+                description: "Curso backend de NodeJS",
+                teacherName: "Juan Torres"
+            }
+        );*/
+
+    // let student = await studentsModel.findOne({
+    //   _id: "640a705f72d18c48ca6f6741",
+    // });
+    // console.log(JSON.stringify(student, null, "\t"));
+
+    //student.courses.push({course: "640a719de27c256369c70d15"});
+    //console.log(JSON.stringify(student));
+
+    //let result = await studentsModel.updateOne(student);
+    //console.log(result);
+  } catch (error) {
+    console.error("No se pudo conectar a la BD usando Moongose: " + error);
+    process.exit();
+  }
+};
+connectMongoDB();

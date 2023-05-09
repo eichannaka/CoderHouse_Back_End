@@ -1,42 +1,45 @@
-const url = "http://localhost:8080";
+// configuracion del socket del lado del cliente
+const socket = io();
 
-//elementos
-const product = document.getElementById("products");
+// Mensaje de inicio cuando se conecta un nuevo cliente
+socket.emit("inicio", "Cliente conectado");
 
-// Datos del user
-const currentFirst = document.getElementById("current_first");
-const currentLast = document.getElementById("current_last");
-fetch("http://localhost:8080/api/auth/profile", {
-  method: "GET",
-  headers: {
-    "Content-Type": "application/json",
-  },
-})
-  .then((response) => response.json())
-  .then((data) => {
-    currentFirst.innerText = `${data.data.firstName}`;
-    currentLast.innerText = `${data.data.lastName}`;
+// Elimina un producto por ID
+document.getElementById("btnDelete").addEventListener("click", () => {
+  socket.emit("deleteProduct", document.getElementById("idProd").value);
+});
+
+// Agrega Producto
+document.getElementById("btnAdd").addEventListener("click", () => {
+  let obj = {
+    title: document.getElementById("title").value,
+    description: document.getElementById("description").value,
+    price: document.getElementById("price").value,
+    thumbnail: document.getElementById("thumbnail").value,
+    code: document.getElementById("code").value,
+    stock: document.getElementById("stock").value,
+    status: document.getElementById("status").value,
+    category: document.getElementById("category").value,
+  };
+  socket.emit("addProduct", obj);
+});
+
+// Lista todos los productos del archivo
+socket.on("productos", (data) => {
+  document.getElementById("tblDatos").innerHTML = creaTabla(data);
+});
+
+// En el caso de error de validación en la carga manda mensaje solamente para quien esta cargando
+socket.on("error", (data) => {
+  if (data !== "0") alert(data);
+});
+
+function creaTabla(data) {
+  let stringTabla = `<tr> <th> Id</th><th> Nombre </th><th> Descripción </th><th> Precio </th><th> Imágen </th><th> Código </th><th> Stock </th><th> Estado </th><th> Categoría </th> </tr>`;
+
+  data.products.forEach((log) => {
+    stringTabla += `<tr> <td> ${log.id} </td><td> ${log.title} </td><td> ${log.description}  </td><td> ${log.price} </td><td> ${log.thumbnail}  </td><td> ${log.code}  </td><td> ${log.stock} </td><td> ${log.status}  </td><td> ${log.category} </td> </tr>`;
   });
 
-// Producctos hasta el momento
-const products = fetch(`${url}/api/products`)
-  .then((res) => res.json())
-  .then((data) => {
-    const listOfProducts = data.payload;
-    listOfProducts.forEach((element) => {
-      product.innerHTML += `<ul class="listado"><li><h1>Title: ${
-        element.title
-      }</h1><h2>Category: ${element.category}</h2><p>Description: ${
-        element.description
-      }</p><p>Code: ${element.code}</p><p>Id: ${
-        element.id ? element.id : element._id
-      }</p><p>Price: ${element.price}</p><p>Status: ${
-        element.status
-      }</p><p>Stock: ${element.stock}</p><p>Image: ${
-        element.thumbnail
-      }</p></li></ul>`;
-    });
-  })
-  .catch((err) => {
-    console.error(err);
-  });
+  return stringTabla;
+}

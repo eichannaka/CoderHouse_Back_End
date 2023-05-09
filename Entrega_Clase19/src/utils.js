@@ -1,13 +1,7 @@
-import { dirname } from "path";
 import { fileURLToPath } from "url";
-import bcrypt from "bcrypt";
+import { dirname } from "path";
 
-export const __dirname = dirname(fileURLToPath(import.meta.url));
+const _filename = fileURLToPath(import.meta.url);
+const _dirname = dirname(_filename);
 
-export const hashPassword = async (password) => {
-  return bcrypt.hash(password, 10);
-};
-
-export const comparePasswords = async (password, passwordBD) => {
-  return bcrypt.compare(password, passwordBD);
-};
+export default _dirname;
